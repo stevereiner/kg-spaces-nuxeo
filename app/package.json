@@ -1,0 +1,34 @@
+{
+  "name": "kg-spaces-nuxeo",
+  "version": "0.9.0",
+  "description": "KG Spaces for Nuxeo: Flexible GraphRAG's processing, hybrid search and AI chat for Nuxeo documents sent from Web UI",
+  "license": "Apache-2.0",
+  "private": true,
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development"
+  },
+  "dependencies": {
+    "@angular/animations": "^20.3.0",
+    "@angular/cdk": "^20.2.0",
+    "@angular/common": "^20.3.0",
+    "@angular/compiler": "^20.3.0",
+    "@angular/core": "^20.3.0",
+    "@angular/forms": "^20.3.0",
+    "@angular/material": "^20.2.0",
+    "@angular/platform-browser": "^20.3.0",
+    "@angular/router": "^20.3.0",
+    "@flexible-graphrag/angular-ui": "^0.9.0",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.6.0",
+    "zone.js": "~0.15.0"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^20.3.0",
+    "@angular/cli": "^20.3.0",
+    "@angular/compiler-cli": "^20.3.0",
+    "typescript": "~5.9.0"
+  }
+}

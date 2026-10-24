@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.angular/
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# a library tarball dropped in for a local build
+docker/lib/*.tgz

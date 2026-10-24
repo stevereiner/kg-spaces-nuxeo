@@ -1,0 +1,10 @@
+{
+  "name": "kg-spaces-nuxeo-repo",
+  "private": true,
+  "description": "Runs the app in app/ from the repository root: npm install, npm start, npm run build (a library tarball in docker/lib/ is used over the npm version)",
+  "scripts": {
+    "postinstall": "npm --prefix app install --no-audit --no-fund && node scripts/use-lib-tarball.mjs",
+    "start": "npm --prefix app start",
+    "build": "npm --prefix app run build"
+  }
+}

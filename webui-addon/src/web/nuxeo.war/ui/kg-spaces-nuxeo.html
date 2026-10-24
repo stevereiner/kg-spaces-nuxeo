@@ -1,0 +1,200 @@
+<!--
+  KG Spaces for Nuxeo: "Add to KG Spaces" and "Ask KG Spaces about this document / folder".
+
+  UI only: the actions open the KG Spaces app (Nuxeo.UI.config.kgSpaces.url, by default /kg-spaces-nuxeo/ on
+  the same host) with the document or the selection; the app does the rest with Flexible GraphRAG. Nothing is
+  written to the documents.
+
+  Loaded by Web UI at startup through the "web-ui" web resources bundle (OSGI-INF/kg-spaces-webui-contrib.xml).
+-->
+<script>
+  // KG Spaces opens Nuxeo documents (search results, answers' sources) in Web UI's tab by this name, so the user keeps
+  // one Web UI tab and one KG Spaces tab
+  if (window.top === window) {
+    window.name = 'kg-spaces-nuxeo-web-ui';
+  }
+
+  /**
+   * Whether KG Spaces' actions apply to a document: folders and documents, not the repository's structural containers
+   * (Nuxeo.UI.config.kgSpaces.excludedTypes: the Root, domains and the Workspaces / Sections / Templates roots by
+   * default), nor trashed ones.
+   */
+  window.kgSpacesAllows = function (doc) {
+    if (!doc || !doc.uid || doc.isTrashed) {
+      return false;
+    }
+    const config = (window.Nuxeo && Nuxeo.UI && Nuxeo.UI.config && Nuxeo.UI.config.kgSpaces) || {};
+    const excluded = String(config.excludedTypes || 'Root,Domain,WorkspaceRoot,SectionRoot,TemplateRoot')
+      .split(',').map((t) => t.trim()).filter(Boolean);
+    return excluded.indexOf(doc.type) === -1;
+  };
+</script>
+
+<!-- KG Spaces' icon: a star graph (a center node joined to five others) -->
+<iron-iconset-svg name="kg-spaces" size="24">
+  <svg>
+    <defs>
+      <g id="graph">
+        <path d="M12 12L12 4.5M12 12L19.2 9.6M12 12L16.5 18.8M12 12L7.5 18.8M12 12L4.8 9.6"
+              stroke="currentColor" stroke-width="1.6" fill="none"></path>
+        <circle cx="12" cy="12" r="3"></circle>
+        <circle cx="12" cy="3.6" r="2.2"></circle>
+        <circle cx="20" cy="9.3" r="2.2"></circle>
+        <circle cx="17" cy="19.6" r="2.2"></circle>
+        <circle cx="7" cy="19.6" r="2.2"></circle>
+        <circle cx="4" cy="9.3" r="2.2"></circle>
+      </g>
+    </defs>
+  </svg>
+</iron-iconset-svg>
+
+<!--
+  KG Spaces' entry in the document toolbar (the current document) and in the selection toolbar of document lists (the
+  selected documents). In a toolbar: the star graph icon, opening a menu with Add to KG Spaces and Ask KG Spaces about
+  this document / folder (Ask for a single document or folder, as in KG Spaces for ACA). When the toolbar has no room
+  and Web UI moves it under its "more" menu (setting show-label): those two as labeled items there.
+
+  What the menu offers is worked out from the live document / selection (_refresh) when it changes, when the menu
+  opens and when an item is clicked: Web UI changes a selection in place, which bindings into nested elements miss.
+-->
+<dom-module id="kg-spaces-menu">
+  <template>
+    <style include="nuxeo-action-button-styles">
+      :host { display: inline-block; }
+      :host([show-label]) { display: block; }
+      [hidden] { display: none !important; }
+      /* its own colors: the selection toolbar is colored, and the menu would inherit its text color */
+      paper-listbox {
+        padding: 4px 0;
+        color: var(--nuxeo-text-default, #212121);
+        background-color: var(--nuxeo-dialog-background, #fff);
+      }
+      paper-item { cursor: pointer; white-space: nowrap; }
+      paper-item iron-icon, .row iron-icon { margin-right: 12px; }
+      paper-item[disabled] { cursor: default; opacity: 0.6; }
+      .row { display: flex; align-items: center; cursor: pointer; padding: 8px 0; white-space: nowrap; }
+    </style>
+    <template is="dom-if" if="[[_shown(document, documents)]]">
+      <template is="dom-if" if="[[!showLabel]]">
+        <paper-menu-button no-animations close-on-activate horizontal-align="right" vertical-offset="44"
+                           on-paper-dropdown-open="_refresh">
+          <paper-icon-button slot="dropdown-trigger" icon="kg-spaces:graph" noink aria-label="KG Spaces"
+                             on-tap="_refresh"></paper-icon-button>
+          <paper-listbox slot="dropdown-content">
+            <paper-item hidden$="[[!_canAdd]]" on-tap="_add">
+              <iron-icon icon="kg-spaces:graph"></iron-icon>Add to KG Spaces
+            </paper-item>
+            <paper-item hidden$="[[!_canAsk]]" on-tap="_ask">
+              <iron-icon icon="icons:question-answer"></iron-icon>[[_askLabel]]
+            </paper-item>
+            <paper-item hidden$="[[_canAdd]]" disabled>Nothing selected can go to KG Spaces</paper-item>
+          </paper-listbox>
+        </paper-menu-button>
+        <nuxeo-tooltip>KG Spaces</nuxeo-tooltip>
+      </template>
+      <template is="dom-if" if="[[showLabel]]">
+        <div class="row" hidden$="[[!_canAdd]]" on-tap="_add">
+          <iron-icon icon="kg-spaces:graph"></iron-icon><span class="label">Add to KG Spaces</span>
+        </div>
+        <div class="row" hidden$="[[!_canAsk]]" on-tap="_ask">
+          <iron-icon icon="icons:question-answer"></iron-icon><span class="label">[[_askLabel]]</span>
+        </div>
+      </template>
+    </template>
+  </template>
+
+  <script>
+    Polymer({
+      is: 'kg-spaces-menu',
+
+      properties: {
+        /** The current document (document toolbar). */
+        document: { type: Object },
+        /** The selected documents (selection toolbar of a list). */
+        documents: { type: Array },
+        /** Set by Web UI when it moves this entry under its "more" menu. */
+        showLabel: { type: Boolean, value: false, reflectToAttribute: true },
+        _canAdd: { type: Boolean, value: false },
+        _canAsk: { type: Boolean, value: false },
+        _askLabel: { type: String, value: '' },
+      },
+
+      observers: ['_refresh(document, documents.*, showLabel)'],
+
+      /** The documents in play: the selection in a list, else the current document. */
+      _docs() {
+        const docs = this.documents;
+        return docs && docs.length ? docs.slice() : this.document ? [this.document] : [];
+      },
+
+      _isFolder(doc) {
+        return !!(doc && doc.facets && doc.facets.indexOf('Folderish') !== -1);
+      },
+
+      /** In the selection toolbar always (what it offers is decided from the live selection); else for a document
+       *  KG Spaces' actions apply to. */
+      _shown(document, documents) {
+        return Array.isArray(documents) || window.kgSpacesAllows(document);
+      },
+
+      _refresh() {
+        const docs = this._docs();
+        const single = docs.length === 1 && window.kgSpacesAllows(docs[0]);
+        this._canAdd = docs.some((d) => window.kgSpacesAllows(d));
+        // as in KG Spaces for ACA: Ask is for a single document or folder, so not when several are selected
+        this._canAsk = single;
+        this._askLabel = single && this._isFolder(docs[0])
+          ? 'Ask KG Spaces about this folder' : 'Ask KG Spaces about this document';
+      },
+
+      _add() {
+        this._refresh();
+        const targets = this._docs().filter((d) => window.kgSpacesAllows(d));
+        if (targets.length) {
+          this._open({ tab: 'processing', nodeIds: targets.map((d) => d.uid).join(',') });
+        }
+      },
+
+      _ask() {
+        this._refresh();
+        const docs = this._docs();
+        if (docs.length === 1 && window.kgSpacesAllows(docs[0])) {
+          const doc = docs[0];
+          this._open({ tab: 'chat', nodeId: doc.uid, nodeName: doc.title || '', isFolder: String(this._isFolder(doc)) });
+        }
+      },
+
+      /** The KG Spaces app's address (org.nuxeo.web.ui.kgSpaces.url), ending with "/". */
+      _appUrl() {
+        const config = (window.Nuxeo && Nuxeo.UI && Nuxeo.UI.config) || {};
+        const url = (config.kgSpaces && config.kgSpaces.url) || '/kg-spaces-nuxeo/';
+        return url.endsWith('/') ? url : `${url}/`;
+      },
+
+      _open(params) {
+        // The same query parameters kg-spaces-aca's page reads (hash routing, so they stay in the browser). One
+        // browser tab for KG Spaces, reused by later clicks (the app also names a tab opened another way), and brought
+        // to the front: some browsers reuse a named tab without showing it.
+        const tab = window.open(`${this._appUrl()}#/kg-spaces?${new URLSearchParams(params).toString()}`, 'kg-spaces-nuxeo');
+        if (tab) {
+          tab.focus();
+        }
+      },
+    });
+  </script>
+</dom-module>
+
+<!-- Document toolbar: before Edit (10), so it gets a toolbar spot first -->
+<nuxeo-slot-content name="kgSpacesDocumentMenu" slot="DOCUMENT_ACTIONS" order="5">
+  <template>
+    <kg-spaces-menu document="[[document]]"></kg-spaces-menu>
+  </template>
+</nuxeo-slot-content>
+
+<!-- Selection toolbar of document lists: the selected documents. Order 1, before Web UI's own (Download 5 ... Delete
+     30): when the bar runs out of room, Web UI moves the highest orders under its "more" menu first -->
+<nuxeo-slot-content name="kgSpacesSelectionMenu" slot="RESULTS_SELECTION_ACTIONS" order="1">
+  <template>
+    <kg-spaces-menu documents="[[selection]]"></kg-spaces-menu>
+  </template>
+</nuxeo-slot-content>

@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<component name="org.integratedsemantics.kgspaces.webui.contrib">
+
+  <!-- Web UI imports every resource of its "web-ui" bundle at startup (Nuxeo.UI.bundles in ui/config.jsp) -->
+  <extension target="org.nuxeo.ecm.platform.WebResources" point="resources">
+    <resource name="kg-spaces-nuxeo.html" type="import">
+      <uri>/ui/kg-spaces-nuxeo.html</uri>
+    </resource>
+  </extension>
+
+  <extension target="org.nuxeo.ecm.platform.WebResources" point="bundles">
+    <bundle name="web-ui">
+      <resources append="true">
+        <resource>kg-spaces-nuxeo.html</resource>
+      </resources>
+    </bundle>
+  </extension>
+
+  <!-- Where the KG Spaces app is, for the browser: Nuxeo.UI.config.kgSpaces.url (every org.nuxeo.web.ui.* property
+       reaches the client). Default: the same host, through the proxy that serves Nuxeo; set kgspaces.url in
+       nuxeo.conf for another address. -->
+  <extension target="org.nuxeo.runtime.ConfigurationService" point="configuration">
+    <property name="org.nuxeo.web.ui.kgSpaces.url">${kgspaces.url:=/kg-spaces-nuxeo/}</property>
+    <!-- Document types the actions are hidden on (comma-separated): the repository's structural containers. Folders
+         and documents below them get the actions; set kgspaces.excludedTypes in nuxeo.conf to change the list (for
+         example to hide workspaces too). -->
+    <property name="org.nuxeo.web.ui.kgSpaces.excludedTypes">${kgspaces.excludedTypes:=Root,Domain,WorkspaceRoot,SectionRoot,TemplateRoot}</property>
+  </extension>
+
+</component>

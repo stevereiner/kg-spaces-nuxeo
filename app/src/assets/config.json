@@ -1,0 +1,9 @@
+{
+  "_comment": "Read at startup (src/app/settings.ts). apiUrl and nuxeoBrowserUrl are where the BROWSER reaches Flexible GraphRAG and Nuxeo: same origin, through the proxy, so the Nuxeo session is shared. nuxeoBackendUrl is where the Flexible GraphRAG BACKEND reaches Nuxeo, server to server: keep it the same as the backend's NUXEO_URL. In Docker, the image sets it from KG_SPACES_NUXEO_BACKEND_URL.",
+  "apiUrl": "/api",
+  "nuxeoBrowserUrl": "/nuxeo",
+  "nuxeoBackendUrl": "http://localhost:8081/nuxeo",
+  "agentIconUrl": "assets/agent.png",
+  "_comment_enabledSources": "Data sources the OTHER SOURCES tab offers. 'nuxeo' is left out: Nuxeo Web UI is the Nuxeo picker here.",
+  "enabledSources": ["upload", "alfresco", "cmis", "web", "wikipedia", "youtube", "google_drive", "onedrive", "s3", "azure_blob", "gcs", "box", "sharepoint"]
+}

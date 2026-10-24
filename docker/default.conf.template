@@ -1,0 +1,52 @@
+server {
+    listen 8080;
+    server_name localhost;
+
+    # file upload on the OTHER SOURCES tab goes through /api/upload
+    client_max_body_size 200m;
+
+    # Nuxeo and the backend are looked up per request (variables below), so this starts even when one of them is
+    # down or elsewhere; NGINX_LOCAL_RESOLVERS comes from the nginx image's 15-local-resolvers.envsh
+    resolver ${NGINX_LOCAL_RESOLVERS} valid=30s;
+
+    location = /health {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
+    }
+
+    # the app's static files
+    location / {
+        root   /usr/share/nginx/html;
+        index  index.html;
+        try_files $uri $uri/ /index.html;
+    }
+
+    # rewritten at startup by 40-kg-spaces-config.sh, so never cache it
+    location = /assets/config.json {
+        root /usr/share/nginx/html;
+        add_header Cache-Control "no-store";
+    }
+
+    # Nuxeo, so the app shares the Web UI session when both are used on this port
+    location /nuxeo/ {
+        set $nuxeo_upstream ${NUXEO_URL};
+        proxy_pass $nuxeo_upstream;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Flexible GraphRAG backend; AI query and chat wait on an LLM
+    location /api/ {
+        set $backend_upstream ${FLEXIBLE_GRAPHRAG_URL};
+        proxy_pass $backend_upstream;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 600s;
+        proxy_send_timeout 600s;
+    }
+}

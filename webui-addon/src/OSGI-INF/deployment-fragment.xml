@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<fragment version="1">
+  <!-- after Web UI, whose nuxeo.war/ui the element is copied into -->
+  <require>org.nuxeo.web.ui</require>
+  <install>
+    <delete path="${bundle.fileName}.tmp"/>
+    <unzip from="${bundle.fileName}" to="${bundle.fileName}.tmp"/>
+    <copy from="${bundle.fileName}.tmp/web/nuxeo.war" to="/"/>
+    <delete path="${bundle.fileName}.tmp"/>
+  </install>
+</fragment>
