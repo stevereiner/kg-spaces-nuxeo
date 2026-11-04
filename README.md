@@ -1,7 +1,7 @@
 # KG Spaces for Nuxeo
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Flexible GraphRAG](https://img.shields.io/badge/Flexible%20GraphRAG-0.9.0-2E7D32.svg)](https://github.com/stevereiner/flexible-graphrag)
+[![Flexible GraphRAG](https://img.shields.io/badge/Flexible%20GraphRAG-0.9.1-2E7D32.svg)](https://github.com/stevereiner/flexible-graphrag)
 [![Nuxeo](https://img.shields.io/badge/Nuxeo-LTS%202025-0066FF.svg)](https://github.com/nuxeo/nuxeo)
 [![Angular](https://img.shields.io/badge/Angular-20-DD0031.svg)](https://angular.dev/)
 [![Supports Hyland OpenArch](https://img.shields.io/badge/Supports-Hyland%20OpenArch-0b5394.svg)](https://github.com/Hyland/OpenArch)
@@ -31,7 +31,7 @@ Flexible GraphRAG supports [Hyland OpenArch](https://github.com/Hyland/OpenArch)
 repository for documents with their extracted text and vector embeddings, as its search + vector store and as the
 store for data sources and document state.
 
-Version 0.9.0, for Flexible GraphRAG 0.9.0 and `@flexible-graphrag/angular-ui` 0.9.0. Apache 2.0.
+Version 0.9.1, for Flexible GraphRAG 0.9.1 and `@flexible-graphrag/angular-ui` 0.9.1. Apache 2.0.
 
 To run it with Nuxeo, Flexible GraphRAG and the proxy in one Docker Compose stack, see
 [KG Spaces Deployment](https://github.com/stevereiner/kg-spaces-deployment).

@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KG Spaces for Nuxeo (Web UI actions)
 Bundle-SymbolicName: org.integratedsemantics.kgspaces.webui;singleton:=true
-Bundle-Version: 0.9.0
+Bundle-Version: 0.9.1
 Bundle-Vendor: Integrated Semantics
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .
