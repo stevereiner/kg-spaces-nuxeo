@@ -7,7 +7,7 @@
 #
 # The shared UI library comes from npm (app/package.json); to build against an unreleased one, put its tarball
 # (flexible-graphrag-angular-ui-<version>.tgz, from `npm run pack:lib` in flexible-graphrag-ui/frontend-angular) in
-# docker/lib/.
+# docker/lib/, with the flexible-graphrag-graph-view-<version>.tgz packed beside it when that is unreleased too.
 
 # ----- the Web UI add-on jar -----
 FROM eclipse-temurin:21-jdk-alpine AS addon-build
@@ -25,7 +25,7 @@ COPY app/package.json app/package-lock.json ./
 RUN npm ci --no-audit --no-fund
 COPY docker/lib/ /tmp/fglib/
 RUN if ls /tmp/fglib/flexible-graphrag-angular-ui-*.tgz >/dev/null 2>&1; then \
-      npm install --no-audit --no-fund /tmp/fglib/flexible-graphrag-angular-ui-*.tgz; fi
+      npm install --no-audit --no-fund /tmp/fglib/flexible-graphrag-*.tgz; fi
 COPY app/ ./
 RUN npx ng build --configuration production
 

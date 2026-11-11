@@ -8,7 +8,11 @@
 # FG_UI (the checkout's flexible-graphrag-ui/frontend-angular) defaults to a ../flexible-graphrag (or
 # ../../newdev3/flexible-graphrag) checkout next to this repository; set it for any other layout.
 #
-# The tarball goes to two places:
+# `npm run pack:lib` also packs @flexible-graphrag/graph-view (the GRAPH tab's view, a dependency of the library); the
+# two go together: until that version of graph-view is on npm, the library tarball alone would fail to install.
+# Without a graph-view tarball, npm's is used.
+#
+# The tarballs go to two places:
 # - docker/lib/: the image's Dockerfile installs it over the npm version, so an image build (the deployment's
 #   scripts/build-kg-spaces-nuxeo.sh, or docker build) uses it. Older tarballs there are removed.
 # - app/node_modules, for `npm start` (ng serve): installed with --no-save, so app/package.json and its lock
@@ -32,12 +36,15 @@ echo "==> building + packing the library in $FG_UI"
 ( cd "$FG_UI" && npm run pack:lib )
 
 TARBALL=$(ls -t "$FG_UI"/dist/flexible-graphrag-angular-ui-*.tgz | head -1)
-echo "==> $(basename "$TARBALL") into docker/lib/ (image builds)"
-rm -f "$HERE"/docker/lib/flexible-graphrag-angular-ui-*.tgz
-cp "$TARBALL" "$HERE/docker/lib/"
+GRAPH_VIEW=$(ls -t "$FG_UI"/dist/flexible-graphrag-graph-view-*.tgz 2>/dev/null | head -1 || true)
+TARBALLS=("$TARBALL")
+[ -n "$GRAPH_VIEW" ] && TARBALLS+=("$GRAPH_VIEW")
+echo "==> ${TARBALLS[*]##*/} into docker/lib/ (image builds)"
+rm -f "$HERE"/docker/lib/flexible-graphrag-angular-ui-*.tgz "$HERE"/docker/lib/flexible-graphrag-graph-view-*.tgz
+cp "${TARBALLS[@]}" "$HERE/docker/lib/"
 
-echo "==> installing it into app/ (npm start), without changing package.json"
-( cd "$HERE/app" && npm install "$TARBALL" --no-save --no-audit --no-fund )
+echo "==> installing them into app/ (npm start), without changing package.json"
+( cd "$HERE/app" && npm install "${TARBALLS[@]}" --no-save --no-audit --no-fund )
 
 echo "==> clearing the Angular CLI cache (see note above)"
 rm -rf "$HERE/app/.angular/cache"

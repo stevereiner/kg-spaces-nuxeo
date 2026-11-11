@@ -1,5 +1,6 @@
 <!--
-  KG Spaces for Nuxeo: "Add to KG Spaces" and "Ask KG Spaces about this document / folder".
+  KG Spaces for Nuxeo: "Add to KG Spaces", "Ask KG Spaces about this document / folder" and "View KG Spaces graph
+  of this document / folder".
 
   UI only: the actions open the KG Spaces app (Nuxeo.UI.config.kgSpaces.url, by default /kg-spaces-nuxeo/ on
   the same host) with the document or the selection; the app does the rest with Flexible GraphRAG. Nothing is
@@ -44,15 +45,23 @@
         <circle cx="7" cy="19.6" r="2.2"></circle>
         <circle cx="4" cy="9.3" r="2.2"></circle>
       </g>
+      <!-- View graph: three nodes joined in a triangle -->
+      <g id="view-graph">
+        <path d="M6 7L18 7M6 7L12 18M18 7L12 18" stroke="currentColor" stroke-width="1.6" fill="none"></path>
+        <circle cx="6" cy="7" r="2.6"></circle>
+        <circle cx="18" cy="7" r="2.6"></circle>
+        <circle cx="12" cy="18" r="2.6"></circle>
+      </g>
     </defs>
   </svg>
 </iron-iconset-svg>
 
 <!--
   KG Spaces' entry in the document toolbar (the current document) and in the selection toolbar of document lists (the
-  selected documents). In a toolbar: the star graph icon, opening a menu with Add to KG Spaces and Ask KG Spaces about
-  this document / folder (Ask for a single document or folder, as in KG Spaces for ACA). When the toolbar has no room
-  and Web UI moves it under its "more" menu (setting show-label): those two as labeled items there.
+  selected documents). In a toolbar: the star graph icon, opening a menu with Add to KG Spaces, Ask KG Spaces about
+  this document / folder and View KG Spaces graph of this document / folder (Ask and View graph for a single document
+  or folder, as in KG Spaces for ACA). When the toolbar has no room and Web UI moves it under its "more" menu (setting
+  show-label): those three as labeled items there.
 
   What the menu offers is worked out from the live document / selection (_refresh) when it changes, when the menu
   opens and when an item is clicked: Web UI changes a selection in place, which bindings into nested elements miss.
@@ -87,6 +96,9 @@
             <paper-item hidden$="[[!_canAsk]]" on-tap="_ask">
               <iron-icon icon="icons:question-answer"></iron-icon>[[_askLabel]]
             </paper-item>
+            <paper-item hidden$="[[!_canAsk]]" on-tap="_graph">
+              <iron-icon icon="kg-spaces:view-graph"></iron-icon>[[_graphLabel]]
+            </paper-item>
             <paper-item hidden$="[[_canAdd]]" disabled>Nothing selected can go to KG Spaces</paper-item>
           </paper-listbox>
         </paper-menu-button>
@@ -98,6 +110,9 @@
         </div>
         <div class="row" hidden$="[[!_canAsk]]" on-tap="_ask">
           <iron-icon icon="icons:question-answer"></iron-icon><span class="label">[[_askLabel]]</span>
+        </div>
+        <div class="row" hidden$="[[!_canAsk]]" on-tap="_graph">
+          <iron-icon icon="kg-spaces:view-graph"></iron-icon><span class="label">[[_graphLabel]]</span>
         </div>
       </template>
     </template>
@@ -117,6 +132,7 @@
         _canAdd: { type: Boolean, value: false },
         _canAsk: { type: Boolean, value: false },
         _askLabel: { type: String, value: '' },
+        _graphLabel: { type: String, value: '' },
       },
 
       observers: ['_refresh(document, documents.*, showLabel)'],
@@ -141,10 +157,12 @@
         const docs = this._docs();
         const single = docs.length === 1 && window.kgSpacesAllows(docs[0]);
         this._canAdd = docs.some((d) => window.kgSpacesAllows(d));
-        // as in KG Spaces for ACA: Ask is for a single document or folder, so not when several are selected
+        // as in KG Spaces for ACA: Ask and View graph are for a single document or folder, so not when several are
+        // selected
         this._canAsk = single;
-        this._askLabel = single && this._isFolder(docs[0])
-          ? 'Ask KG Spaces about this folder' : 'Ask KG Spaces about this document';
+        const what = single && this._isFolder(docs[0]) ? 'folder' : 'document';
+        this._askLabel = `Ask KG Spaces about this ${what}`;
+        this._graphLabel = `View KG Spaces graph of this ${what}`;
       },
 
       _add() {
@@ -156,11 +174,20 @@
       },
 
       _ask() {
+        this._openOne('chat');
+      },
+
+      _graph() {
+        this._openOne('graph');
+      },
+
+      /** Ask / View graph: the KG Spaces tab for the one document or folder in play. */
+      _openOne(tab) {
         this._refresh();
         const docs = this._docs();
         if (docs.length === 1 && window.kgSpacesAllows(docs[0])) {
           const doc = docs[0];
-          this._open({ tab: 'chat', nodeId: doc.uid, nodeName: doc.title || '', isFolder: String(this._isFolder(doc)) });
+          this._open({ tab, nodeId: doc.uid, nodeName: doc.title || '', isFolder: String(this._isFolder(doc)) });
         }
       },
 

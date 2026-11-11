@@ -19,7 +19,11 @@
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": ["src/favicon.ico", "src/assets"],
-            "styles": ["src/styles.scss", "node_modules/@flexible-graphrag/angular-ui/styles/fg-theme.scss"]
+            "styles": ["src/styles.scss", "node_modules/@flexible-graphrag/angular-ui/styles/fg-theme.scss"],
+            "allowedCommonJsDependencies": [
+              "cytoscape", "cytoscape-fcose", "cytoscape-dagre", "cose-base", "layout-base",
+              "@dagrejs/dagre", "@dagrejs/graphlib"
+            ]
           },
           "configurations": {
             "production": {

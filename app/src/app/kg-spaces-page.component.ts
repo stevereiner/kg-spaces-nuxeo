@@ -5,17 +5,18 @@ import { MatCardModule } from '@angular/material/card';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { FlexibleGraphragUiModule, ProcessingSessionService } from '@flexible-graphrag/angular-ui';
-import type { AskScope } from '@flexible-graphrag/angular-ui';
+import type { AskScope, GraphShowEvent } from '@flexible-graphrag/angular-ui';
 import { NuxeoNodeDetail, NuxeoService } from './nuxeo.service';
 import { SETTINGS } from './settings';
 
 /**
- * The KG Spaces page: Flexible GraphRAG's four tabs, opened from Nuxeo Web UI's "Add to KG Spaces" (with the
- * selected documents' ids) or "Ask KG Spaces about this document / folder" (with one id). The same query parameters
- * as kg-spaces-aca's page:
+ * The KG Spaces page: Flexible GraphRAG's five tabs, opened from Nuxeo Web UI's "Add to KG Spaces" (with the
+ * selected documents' ids), "Ask KG Spaces about this document / folder" or "View KG Spaces graph of this document /
+ * folder" (with one id). The same query parameters as kg-spaces-aca's page:
  *
  *   #/kg-spaces?tab=processing&nodeIds=<uid>,<uid>,...
  *   #/kg-spaces?tab=chat&nodeId=<uid>&nodeName=<title>&isFolder=true|false
+ *   #/kg-spaces?tab=graph&nodeId=<uid>&nodeName=<title>&isFolder=true|false
  *
  * Nuxeo is read as the signed-in Web UI user (same origin, shared session), and Flexible GraphRAG gets that user's
  * Nuxeo token in nuxeo_config, so an ingest reads exactly what the user may read.
@@ -36,6 +37,7 @@ export class KgSpacesPageComponent implements OnInit {
   // The browser sends Nuxeo's session cookie to any port of the same host: Web UI on Nuxeo's own port or on the proxy
   private static readonly NOT_SIGNED_IN = 'Not signed in to Nuxeo: use the KG Spaces actions in Nuxeo Web UI.';
   private static readonly CHAT_TAB = 3;
+  private static readonly GRAPH_TAB = 4;
 
   user: string | null = null;
   /** The Nuxeo server, for the title bar's tooltip. */
@@ -60,6 +62,11 @@ export class KgSpacesPageComponent implements OnInit {
   configurationTimestamp = 0;
   /** AI CHAT answers only from this document / folder ("Ask KG Spaces about ..."). */
   chatScope: AskScope | null = null;
+  /** GRAPH shows the property graph of this document / folder ("View KG Spaces graph of ..."). */
+  graphScope: AskScope | null = null;
+  /** GRAPH shows these instead: a "Show graph" on Processing, Hybrid Search or AI Chat (a job, results, sources). */
+  graph: GraphShowEvent | null = null;
+  graphKey = 0;
 
   ngOnInit(): void {
     this.nuxeo.currentUser().then((user) => {
@@ -74,6 +81,8 @@ export class KgSpacesPageComponent implements OnInit {
     this.route.queryParamMap.subscribe((params) => {
       if (params.get('tab') === 'chat' && params.get('nodeId')) {
         this.askAbout(params.get('nodeId')!, params.get('nodeName') || '', params.get('isFolder') === 'true');
+      } else if (params.get('tab') === 'graph' && params.get('nodeId')) {
+        this.viewGraph(params.get('nodeId')!, params.get('nodeName') || '', params.get('isFolder') === 'true');
       } else {
         const nodeIds = (params.get('nodeIds') || '').split(',').map((s) => s.trim()).filter(Boolean);
         if (!nodeIds.length) {
@@ -113,6 +122,8 @@ export class KgSpacesPageComponent implements OnInit {
     this.session.tab = null;
     this.nuxeo.forgetToken();
     this.chatScope = null;
+    this.graphScope = null;
+    this.graph = null;
     this.hasConfiguredSources = false;
     this.configuredDataSource = '';
     this.configuredFiles = [];
@@ -157,12 +168,36 @@ export class KgSpacesPageComponent implements OnInit {
   /** "Ask KG Spaces about this document / folder": AI CHAT scoped to it. */
   private askAbout(nodeId: string, name: string, isFolder: boolean): void {
     this.selectedTabIndex = KgSpacesPageComponent.CHAT_TAB;
-    this.chatScope = { data_source: 'nuxeo', url: SETTINGS.nuxeoBackendUrl, node_id: nodeId, is_folder: isFolder,
-                       name: name || undefined };
-    // a folder covers everything below it, by path
+    this.chatScope = this.nodeScope(nodeId, name, isFolder);
+    this.withPath(nodeId, name, () => this.chatScope, (scope) => this.chatScope = scope);
+  }
+
+  /** "View KG Spaces graph of this document / folder": GRAPH on it, scoped as AI CHAT is. */
+  private viewGraph(nodeId: string, name: string, isFolder: boolean): void {
+    this.selectedTabIndex = KgSpacesPageComponent.GRAPH_TAB;
+    this.graph = null;
+    this.graphScope = this.nodeScope(nodeId, name, isFolder);
+    this.withPath(nodeId, name, () => this.graphScope, (scope) => this.graphScope = scope);
+  }
+
+  /** "Show graph" on another tab: GRAPH on that job's, those results' or those sources' documents. */
+  onShowGraph(event: GraphShowEvent): void {
+    this.graph = event;
+    this.graphKey++;
+    this.selectedTabIndex = KgSpacesPageComponent.GRAPH_TAB;
+  }
+
+  private nodeScope(nodeId: string, name: string, isFolder: boolean): AskScope {
+    return { data_source: 'nuxeo', url: SETTINGS.nuxeoBackendUrl, node_id: nodeId, is_folder: isFolder,
+             name: name || undefined };
+  }
+
+  /** A folder covers everything below it, by path: add it once resolved, unless the scope moved on meanwhile. */
+  private withPath(nodeId: string, name: string, get: () => AskScope | null, set: (scope: AskScope) => void): void {
     this.nuxeo.resolve([nodeId]).then(([node]) => {
-      if (node && this.chatScope?.node_id === nodeId) {
-        this.chatScope = { ...this.chatScope, path: node.path, name: name || node.name, is_folder: node.isFolder };
+      const scope = get();
+      if (node && scope?.node_id === nodeId) {
+        set({ ...scope, path: node.path, name: name || node.name, is_folder: node.isFolder });
       }
     });
   }

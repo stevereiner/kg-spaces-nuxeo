@@ -4,6 +4,25 @@ All notable changes to KG Spaces for Nuxeo are documented in this file. Versions
 [Flexible GraphRAG](https://github.com/stevereiner/flexible-graphrag) release they go with, and the
 `@flexible-graphrag/angular-ui` library version they need.
 
+## [2026-11-10] — v0.10.0: goes with Flexible GraphRAG 0.10.0
+
+### Added
+
+- **View KG Spaces graph of this document / folder** in the Web UI KG Spaces menu (a third item,
+  for a single document or folder), and the **GRAPH** tab in the app (`#/kg-spaces?tab=graph&nodeId=...`):
+  the entities, relationships and chunks extracted from it (Cytoscape; layouts, type / chunk /
+  relationship toggles, properties panel, double-click to expand, PNG). Scoped the way Ask is,
+  and filtered to documents the user may read.
+- **Show graph** buttons on the other tabs open GRAPH on those documents: a finished ingest
+  (Processing, and each job in its job list), Hybrid Search results, and the sources of an AI
+  Query answer or an AI Chat reply.
+- `angular.json` allows the graph's CommonJS dependencies (Cytoscape and its layouts).
+
+### Changed
+
+- Requires `@flexible-graphrag/angular-ui` ^0.10.0 (the GRAPH tab) and a Flexible GraphRAG 0.10.0+
+  backend (`/api/graph/*`).
+
 ## [2026-11-04] — v0.9.1: goes with Flexible GraphRAG 0.9.1
 
 ### Changed
