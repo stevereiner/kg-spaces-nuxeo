@@ -1,7 +1,7 @@
 # KG Spaces for Nuxeo
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Flexible GraphRAG](https://img.shields.io/badge/Flexible%20GraphRAG-0.10.0-2E7D32.svg)](https://github.com/stevereiner/flexible-graphrag)
+[![Flexible GraphRAG](https://img.shields.io/badge/Flexible%20GraphRAG-0.11.0-2E7D32.svg)](https://github.com/stevereiner/flexible-graphrag)
 [![Nuxeo](https://img.shields.io/badge/Nuxeo-LTS%202025-0066FF.svg)](https://github.com/nuxeo/nuxeo)
 [![Angular](https://img.shields.io/badge/Angular-20-DD0031.svg)](https://angular.dev/)
 [![Supports Hyland OpenArch](https://img.shields.io/badge/Supports-Hyland%20OpenArch-0b5394.svg)](https://github.com/Hyland/OpenArch)
@@ -33,7 +33,7 @@ Flexible GraphRAG supports [Hyland OpenArch](https://github.com/Hyland/OpenArch)
 repository for documents with their extracted text and vector embeddings, as its search + vector store and as the
 store for data sources and document state.
 
-Version 0.10.0, for Flexible GraphRAG 0.10.0 and `@flexible-graphrag/angular-ui` 0.10.0. Apache 2.0.
+Version 0.11.0, for Flexible GraphRAG 0.11.0 and `@flexible-graphrag/angular-ui` 0.11.0. Apache 2.0.
 
 To run it with Nuxeo, Flexible GraphRAG and the proxy in one Docker Compose stack, see
 [KG Spaces Deployment](https://github.com/stevereiner/kg-spaces-deployment).
@@ -119,7 +119,8 @@ browser sends Nuxeo's session cookie to any port of the same host, so the app sh
 through the dev server, `http://localhost:4300/nuxeo/ui/`, is not a way to use it: Nuxeo's sign-in sends the browser
 on to Nuxeo's own port.)
 
-The app needs `@flexible-graphrag/angular-ui` 0.10.0 or later (the GRAPH tab; 0.9.0 brought its title bar,
+The app needs `@flexible-graphrag/angular-ui` 0.11.0 or later (**Browse...** in the source forms, results from
+federated backends; 0.10.0 brought the GRAPH tab; 0.9.0 its title bar,
 Dark / Light theme and the `hostSourceAuth` and `runInBackground` options), with the library's `styles/fg-theme.scss` in `angular.json`'s
 `styles`.
 
